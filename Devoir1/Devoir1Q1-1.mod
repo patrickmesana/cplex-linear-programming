@@ -61,7 +61,7 @@ subject to{
   forall (f in F)
    
     Fournisseurs:
-      if (fournisseurs_tot > (usines_tot * 5))
+      if (fournisseurs_tot < (usines_tot * 5))
          sum (u in U) x[f][u] <= fournisseurs[f];
       else
        	//Pour tous les fournisseurs on utise exactement l'offre du fournisseur
