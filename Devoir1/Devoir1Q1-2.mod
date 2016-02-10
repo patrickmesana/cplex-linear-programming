@@ -105,9 +105,10 @@ subject to{
       
       
   forall (u in U) 
-    FourtyPercentProd:   
     // Chaque usine ne peut recevoir d'un meme fournisseur qu'au plus 40% de son utilisations totale de MP
-      sum (f in F) x[f][u] <= 2 * usines[u]; // 40% * 5 * capacity => 2 * capacity
+      forall (f in F) 
+      	FourtyPercentProd:  
+      	x[f][u] <= 2 * sum (c in C) y[u][c]; // 40% * 5 * capacity => 2 * capacity
       
       
   forall (u1 in U)
