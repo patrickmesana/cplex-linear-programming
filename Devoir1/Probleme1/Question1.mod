@@ -59,35 +59,22 @@ minimize cost;
 // ***********************
 subject to{
   forall (f in F)
-   
+    //Pour tous les fournisseurs on utise au plus l'offre max du fournisseur
     Fournisseurs:
-      if (fournisseurs_tot < (usines_tot * 5))
-         sum (u in U) x[f][u] <= fournisseurs[f];
-      else
-       	//Pour tous les fournisseurs on utise exactement l'offre du fournisseur
-         sum (u in U) x[f][u] == fournisseurs[f];
+		sum (u in U) x[f][u] <= fournisseurs[f];
 
   forall (u in U)
     Usines_F: 
-     if ((usines_tot * 5) > fournisseurs_tot)
-     // Pour toutes les usines on ne depasse pas la capacite max de l'usine, par raport a l'offre 
+     // Pour toutes les usines on ne depasse pas la capacite max de l'usine 
       sum (f in F) x[f][u] <= usines[u] * 5;
-     else
-      sum (f in F) x[f][u] == usines[u] * 5;
    
   forall (i in U)
     Usines_C: 
-     if (usines_tot > centres_tot) 
      // Pour toutes les usines on ne depasse pas la capacite max de l'usine, par raport a la demande
-      sum (j in C) y[i][j] <= usines[i];      
-     else
-      sum (j in C) y[i][j] == usines[i];    
+      sum (j in C) y[i][j] <= usines[i];         
       
   forall (j in C)
     Centres: 
-     if (centres_tot > usines_tot)
-        sum (i in U) y[i][j] <= centres[j];
-     else
      // Pour tous les centre on arrive exactement a la demande
       sum (i in U) y[i][j] == centres[j]; 
      
