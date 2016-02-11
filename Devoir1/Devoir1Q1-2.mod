@@ -53,6 +53,8 @@ dexpr float cost =
 
 minimize cost;
 
+dexpr float prod_total = sum (u in U, c in C) y[u][c];
+
 
 // ***********************
 // Contraintes
@@ -98,27 +100,23 @@ subject to{
       sum (f in F) x[f][i] == 5 * sum(j in C) y[i][j];
       
       
-   forall (u in U, c in C) y[u][c] <= 0.7 * centres[c];
-      
-//  forall (c in C) 
-//    SeventyPercentDemand:   
-//    // Chaque centre ne peut recevoir d'une meme usine que 70% de sa demande
-//      sum (u in U) y[u][c] <= 0.7 * centres[c];
-//      
-//      
+   forall (u in U, c in C) 
+   // Chaque centre ne peut recevoir d'une meme usine que 70% de sa demande
+    SeventyPercentDemand:   
+   	y[u][c] <= 0.7 * centres[c];
+          
   forall (u in U, f in F) 
     // Chaque usine ne peut recevoir d'un meme fournisseur qu'au plus 40% de son utilisations totale de MP
       	FourtyPercentProd:  
-      	x[f][u] <= 0.4 * sum (f in F) x[f][u]; // 40% * 5 * capacity => 2 * capacity
-//      
-//      
-//  forall (u1 in U)
-//    forall (u2 in U)
-//      // L'ecart de production entre 2 usines ne peut pas exceder 10% de la production totale
-//      TenPercentTotal:
-//      if(u1 != u2) {
-//     	 sum (c in C) y[u1][c] + sum (c in C) y[u2][c] <= 0.1 * usines_tot;
-//      }      
+      	x[f][u] <= 2 * sum (c in C) y[u][c]; // 40% * 5 * capacity => 2 * capacity
+      
+      
+  forall (u1 in U, u2 in U)
+      // L'ecart de production entre 2 usines ne peut pas exceder 10% de la production totale
+      TenPercentTotal:
+      if(u1 != u2) {
+     	 abs(sum (c in C) y[u1][c] - sum (c in C) y[u2][c]) <= 0.1 * prod_total;
+      }      
     
 };
 
