@@ -2,19 +2,19 @@
 	<version>1.0</version>
 	<configs>
 		<config category="opl" default="true" name="Configuration1">
-			<ref name="Devoir1.ops" type="setting">
+			<ref name="Question1.mod" type="model">
 			</ref>
-			<ref name="Devoir1.dat" type="data">
+			<ref name="Probleme1.ops" type="setting">
 			</ref>
-			<ref name="Devoir1Q1-1.mod" type="model">
+			<ref name="Probleme1.dat" type="data">
 			</ref>
 		</config>
 		<config category="opl" default="false" name="Configuration2">
-			<ref name="Devoir1Q1-2.mod" type="model">
+			<ref name="Question2.mod" type="model">
 			</ref>
-			<ref name="Devoir1.ops" type="setting">
+			<ref name="Probleme1.ops" type="setting">
 			</ref>
-			<ref name="Devoir1.dat" type="data">
+			<ref name="Probleme1.dat" type="data">
 			</ref>
 		</config>
 	</configs>
