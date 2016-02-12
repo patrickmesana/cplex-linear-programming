@@ -114,7 +114,7 @@ subject to{
 		a[i][1] + c[i][3] <= 1;
 		a[i][3] + c[i][1] <= 1;
 		c[i][1] + d[i][3] <= 1;
-		d[i][3] + c[i][1] <= 1;
+		c[i][3] + d[i][1] <= 1;
 	}
 	
 	//P7 et P13 ne peuvent pas etre adjacents
@@ -122,7 +122,7 @@ subject to{
 		a[i][7] + c[i][13] <= 1;
 		a[i][13] + c[i][7] <= 1;
 		c[i][7] + d[i][13] <= 1;
-		d[i][13] + c[i][7] <= 1;
+		c[i][13] + d[i][7] <= 1;
 	}
 	
     //P6 et P12 ne peuvent pas se retrouver dans le meme avions
@@ -130,7 +130,7 @@ subject to{
 		a[i][6] + c[i][12] <= 1;
 		a[i][12] + c[i][6] <= 1;
 		c[i][6] + d[i][12] <= 1;
-		d[i][12] + c[i][6] <= 1;
+		c[i][12] + d[i][6] <= 1;
 		d[i][12] + a[i][6] <= 1;
 		a[i][12] + d[i][6] <= 1;
 	}
