@@ -10,161 +10,193 @@ range avions = 1..nbrAvionsMax;
 int nbrProduitsMax = ...;
 range produits = 1..nbrProduitsMax;
 
+int nbrCompartimentsMax = ...;
+range compartiments = 1..nbrCompartimentsMax;
+
+//prend la valeur haute dans le cas d'un nombre impair, n = 3 => cDuMilieu = 2
+int compartimentDuMilieu = (nbrCompartimentsMax + 1) div 2;
+
 float avionMasseMax = ...;
 float ACD[1..3] = ...;
 float PQ[produits] = ...;
 float PV[produits] = ...;
 
-
 // ***********************
 // Variables de decision
 // ***********************
 dvar int+ avion[avions];
-dvar int+ a[avions][produits];
-dvar int+ c[avions][produits];
-dvar int+ d[avions][produits];
-dvar float+ qa[avions][produits];
-dvar float+ qc[avions][produits];
-dvar float+ qd[avions][produits];
+dvar int+ compartiment[avions][compartiments][produits];
+dvar float+ compartiment_quantity[avions][compartiments][produits];
+
 // ***********************
 // Fonction-objectif
 // ***********************
-
-
 minimize sum (a in avions) avion[a];
  
 // ***********************
 // Contraintes
 // ***********************
 
+dexpr int compartimentEnNbr[i in avions][c in compartiments]
+ 	= sum(p in produits) compartiment[i][c][p];
 
+dexpr float compartimentEnTonnes[i in avions][c in compartiments]
+ 	= sum(p in produits) compartiment_quantity[i][c][p];
 
-dexpr int arriere[i in avions] = sum(p in produits) a[i][p];
-dexpr int centre[i in avions] = sum(p in produits) c[i][p];
-dexpr int devant[i in avions] = sum(p in produits) d[i][p];
+dexpr float compartimentEnM3[i in avions][c in compartiments]
+ 	= sum(p in produits) compartiment_quantity[i][c][p] * PV[p];
 
-dexpr float arriereEnTonnes[i in avions] = sum(p in produits) qa[i][p];
-dexpr float centreEnTonnes[i in avions] = sum(p in produits) qc[i][p];
-dexpr float devantEnTonnes[i in avions] = sum(p in produits) qd[i][p];
-
-dexpr float arriereEnM3[i in avions] = sum(p in produits) qa[i][p] * PV[p];
-dexpr float centreEnM3[i in avions] = sum(p in produits) qc[i][p] * PV[p];
-dexpr float devantEnM3[i in avions] = sum(p in produits) qd[i][p] * PV[p];
+dexpr int produitsDesCompartiments[i in avions] = max(c in compartiments, p in produits) compartiment[i][c][p];
+dexpr int sommeDesCompartiments[i in avions] = sum(c in compartiments, p in produits) compartiment[i][c][p];
 
 subject to{
 	
 	//1 avion ne peut etre emprunter qu'une seule fois au plus
-	forall (i in avions, p in produits){
+	forall (i in avions){
 		avion[i] <= 1;
 	}
 	
 	//Un seul type de produit par compartiment
-	forall (i in avions){
-		arriere[i] <= 1;
-		centre[i] <= 1; 
-		devant[i] <= 1;
+	forall (i in avions, c in compartiments){
+		compartimentEnNbr[i][c] <= 1;
 	}
-	  
+
+
 	//Ai, Ci, et Di forment un avion de 3 compartiments
 	forall (i in avions){
-		avion[i] == 0 => (arriere[i] == 0 && centre[i] == 0 && devant[i] == 0);
-		avion[i] == 1 => (arriere[i] == 1 || centre[i] == 1 || devant[i] == 1);
+		avion[i] == 0 => produitsDesCompartiments[i] == 0;
+		avion[i] == 1 => sommeDesCompartiments[i] >= 1;
 	}
 	
 	//La demande
-	forall (p in produits) {
-		sum(i in avions) qa[i][p] + 
-		sum(i in avions) qc[i][p] +
-		sum(i in avions) qd[i][p] == PQ[p]; 
+	forall (p in produits) {		
+		sum(i in avions, c in compartiments) compartiment_quantity[i][c][p] == PQ[p];
 	}
 	
 	//La masse d'un produit dans un compartiment est au plus 100
-	forall (i in avions, p in produits){
-		qa[i][p]	<= avionMasseMax * a[i][p];
-		qc[i][p]	<= avionMasseMax * c[i][p];
-		qd[i][p]	<= avionMasseMax * d[i][p];
+	//Cree une relation entre les deux variables de decisions.
+	//La quantite depend maintenant de si la variable binaire est 1 ou 0
+	forall (i in avions, p in produits, c in compartiments){
+		compartiment_quantity[i][c][p] <= avionMasseMax * compartiment[i][c][p];
 	}
 	
 	//La masse total des compartiements est au plus 100
 	forall (i in avions) {
-		arriereEnTonnes[i] + centreEnTonnes[i] + devantEnTonnes[i] <= avionMasseMax;
+		sum(c in compartiments) compartimentEnTonnes[i][c] <= avionMasseMax;
 	}
 	
 	//Chaque compartiment a une limite de volume 
-	forall (i in avions){
-		arriereEnM3[i] <= ACD[1];
-		centreEnM3[i] <= ACD[2];
-		devantEnM3[i] <= ACD[3];	
+	forall (i in avions, c in compartiments){
+		compartimentEnM3[i][c] <= ACD[c];
 	}
 		
 	//Le centre doit etre plus lourd que l'arriere et le devant
 	forall (i in avions){
-		centreEnTonnes[i] >= arriereEnTonnes[i] &&
-		centreEnTonnes[i] >= devantEnTonnes[i];
+		compartimentEnTonnes[i][compartimentDuMilieu] >= compartimentEnTonnes[i][1] &&
+		compartimentEnTonnes[i][compartimentDuMilieu] >= compartimentEnTonnes[i][nbrCompartimentsMax];
 	}
 	 
 	//L'ecart de masse entre le chargement de devant et celui de
 	//derriere ne doit pas depasser 10 tonnes 
 	forall (i in avions){
-		abs(arriereEnTonnes[i] - devantEnTonnes[i]) <= 10;	
+		abs(compartimentEnTonnes[i][1] - compartimentEnTonnes[i][nbrCompartimentsMax]) <= 10;	
 	}
 	
-	//P1 et P3 ne peuvent pas etre adjacents
+	//P1 et P3 ne peuvent pas etre adjacents quand 3 compartiments
 	forall (i in avions){
-		a[i][1] + c[i][3] <= 1;
-		a[i][3] + c[i][1] <= 1;
-		c[i][1] + d[i][3] <= 1;
-		c[i][3] + d[i][1] <= 1;
+		compartiment[i][1][1] + compartiment[i][compartimentDuMilieu][3] <= 1;
+		compartiment[i][1][3] + compartiment[i][compartimentDuMilieu][1] <= 1;
+		compartiment[i][compartimentDuMilieu][1] + compartiment[i][nbrCompartimentsMax][3] <= 1;
+		compartiment[i][compartimentDuMilieu][3] + compartiment[i][nbrCompartimentsMax][1] <= 1;
 	}
 	
-	//P7 et P13 ne peuvent pas etre adjacents
+	//P7 et P13 ne peuvent pas etre adjacents quand 3 compartiments
 	forall (i in avions){
-		a[i][7] + c[i][13] <= 1;
-		a[i][13] + c[i][7] <= 1;
-		c[i][7] + d[i][13] <= 1;
-		c[i][13] + d[i][7] <= 1;
+		compartiment[i][1][7] + compartiment[i][compartimentDuMilieu][13] <= 1;
+		compartiment[i][1][13] + compartiment[i][compartimentDuMilieu][7] <= 1;
+		compartiment[i][compartimentDuMilieu][7] + compartiment[i][nbrCompartimentsMax][13] <= 1;
+		compartiment[i][compartimentDuMilieu][13] + compartiment[i][nbrCompartimentsMax][7] <= 1;
 	}
 	
-    //P6 et P12 ne peuvent pas se retrouver dans le meme avions
+    //P6 et P12 ne peuvent pas se retrouver dans le meme avions quand 3 compartiments
 	forall (i in avions){
-		a[i][6] + c[i][12] <= 1;
-		a[i][12] + c[i][6] <= 1;
-		c[i][6] + d[i][12] <= 1;
-		c[i][12] + d[i][6] <= 1;
-		d[i][12] + a[i][6] <= 1;
-		a[i][12] + d[i][6] <= 1;
+		compartiment[i][1][6] + compartiment[i][compartimentDuMilieu][12] <= 1;
+		compartiment[i][1][12] + compartiment[i][compartimentDuMilieu][6] <= 1;
+		compartiment[i][compartimentDuMilieu][6] + compartiment[i][nbrCompartimentsMax][12] <= 1;
+		compartiment[i][compartimentDuMilieu][12] + compartiment[i][nbrCompartimentsMax][6] <= 1;
+		compartiment[i][nbrCompartimentsMax][12] + compartiment[i][1][6] <= 1;
+		compartiment[i][1][12] + compartiment[i][nbrCompartimentsMax][6] <= 1;
 	}
 	
 };
 
-
 //Script pour ecrire la solution optimale
 execute{
 	for (var i in avions) {
-		var aj = 0, cj = 0, dj = 0;
-		var aq = 0, cq = 0, dq = 0;
+		var compartiments_j = new Array(nbrCompartimentsMax);
+		var compartiments_quantity_j = new Array(nbrCompartimentsMax);
 		for (var j in produits) {
-			if(a[i][j] > 0) {
-				aj = j;	
-				aq = qa[i][j];		
-			} 	
-			if(c[i][j] > 0) {
-				cj = j;	
-				cq = qc[i][j];		
-			} 
-			if(d[i][j] > 0) {
-				dj = j;	
-				dq = qd[i][j];	
-			} 	
+			for (var c in compartiments) {
+				if(compartiment[i][c][j] > 0) {
+				compartiments_j[c] = j;	
+				compartiments_quantity_j[c] = compartiment_quantity[i][c][j];		
+				} 		
+			}		 	
 		}
 		
-		var astr = "empty", cstr = "empty", dstr = "empty";
-		if (aj > 0 && aq > 0) astr = "P" + aj + ":" + aq;
-		if (cj > 0 && cq > 0) cstr = "P" + cj + ":" + cq;	
-		if (dj > 0 && dq > 0) dstr = "P" + dj + ":" + dq;	
+		//Readable Version
+//		var compartiments_str = new Array(nbrCompartimentsMax);
+//		for (var c in compartiments) {
+//			compartiments_str[c] = "empty";	
+//		}
+//		
+//		for (var c in compartiments) {
+//			if (compartiments_j[c] > 0 && compartiments_quantity_j[c] > 0)		
+//				compartiments_str[c] = "P" + compartiments_j[c] + ":" + compartiments_quantity_j[c];	
+//		}
+//			
+//		var isPlainNonEmpty = false;
+//		for (var c in compartiments) {
+//			isPlainNonEmpty = isPlainNonEmpty || compartiments_j[c] > 0;		
+//		}
+//		
+//		if (isPlainNonEmpty) {
+//			var strFinal = "";
+//			for (var c in compartiments) {
+//				strFinal += compartiments_str[c];
+//				if (c < nbrCompartimentsMax) {
+//					strFinal += " | ";			
+//				}		
+//			}
+//			writeln(strFinal);
+//		}  
 		
-		if (aj > 0 || cj > 0 || dj > 0) 
-		   writeln(astr + " | " + cstr + " | " + dstr);
+		//CVS Version
+		var compartiments_str = new Array(nbrCompartimentsMax);
+		for (var c in compartiments) {
+			compartiments_str[c] = "";	
+		}
+		
+		for (var c in compartiments) {
+			if (compartiments_j[c] > 0 && compartiments_quantity_j[c] > 0)		
+				compartiments_str[c] = compartiments_quantity_j[c];	
+		}
+			
+		var isPlainNonEmpty = false;
+		for (var c in compartiments) {
+			isPlainNonEmpty = isPlainNonEmpty || compartiments_j[c] > 0;		
+		}
+		
+		if (isPlainNonEmpty) {
+			var strFinal = "";
+			for (var c in compartiments) {
+				strFinal += compartiments_str[c];
+				if (c < nbrCompartimentsMax) {
+					strFinal += ",";			
+				}		
+			}
+			writeln(strFinal);
+		} 
 	}
 		
 }

@@ -7,6 +7,8 @@
 nbrAvionsMax = 100;
  
 nbrProduitsMax = 15;
+
+nbrCompartimentsMax = 3;
  
 avionMasseMax = 100;
  
