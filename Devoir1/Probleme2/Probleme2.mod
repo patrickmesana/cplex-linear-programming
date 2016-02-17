@@ -140,31 +140,64 @@ subject to{
 
 //Script pour ecrire la solution optimale
 execute{
+
+	var ajs = new Array(nbrAvionsMax);
+	var cjs = new Array(nbrAvionsMax);
+	var djs = new Array(nbrAvionsMax);
+	var aqs = new Array(nbrAvionsMax);
+	var cqs = new Array(nbrAvionsMax);
+	var dqs = new Array(nbrAvionsMax);
+	
 	for (var i in avions) {
-		var aj = 0, cj = 0, dj = 0;
-		var aq = 0, cq = 0, dq = 0;
 		for (var j in produits) {
 			if(a[i][j] > 0) {
-				aj = j;	
-				aq = qa[i][j];		
+				ajs[i] = j;	
+				aqs[i] = qa[i][j];		
 			} 	
 			if(c[i][j] > 0) {
-				cj = j;	
-				cq = qc[i][j];		
+				cjs[i] = j;	
+				cqs[i] = qc[i][j];		
 			} 
 			if(d[i][j] > 0) {
-				dj = j;	
-				dq = qd[i][j];	
+				djs[i] = j;	
+				dqs[i] = qd[i][j];	
 			} 	
 		}
-		
-		var astr = "empty", cstr = "empty", dstr = "empty";
-		if (aj > 0 && aq > 0) astr = "P" + aj + ":" + aq;
-		if (cj > 0 && cq > 0) cstr = "P" + cj + ":" + cq;	
-		if (dj > 0 && dq > 0) dstr = "P" + dj + ":" + dq;	
-		
-		if (aj > 0 || cj > 0 || dj > 0) 
-		   writeln(astr + " | " + cstr + " | " + dstr);
 	}
+	
+	writeln("Readable Version: ")
+	for (var i in avions) {
+		var astr = "empty", cstr = "empty", dstr = "empty";
+		if (ajs[i] > 0 && aqs[i] > 0) astr = "P" + ajs[i] + ":" + aqs[i];
+		if (cjs[i] > 0 && cqs[i] > 0) cstr = "P" + cjs[i] + ":" + cqs[i];	
+		if (djs[i] > 0 && dqs[i] > 0) dstr = "P" + djs[i] + ":" + dqs[i];	
 		
+		if (ajs[i] > 0 || cjs[i] > 0 || djs[i] > 0) 
+		   writeln(astr + " | " + cstr + " | " + dstr);
+	   
+  	}	 
+  	
+  	writeln(" \nCSV Products: ")
+  	for (var i in avions) {
+		var astr = "", cstr = "", dstr = "";
+		if (ajs[i] > 0 && aqs[i] > 0) astr = ajs[i];
+		if (cjs[i] > 0 && cqs[i] > 0) cstr = cjs[i];	
+		if (djs[i] > 0 && dqs[i] > 0) dstr = djs[i];	
+		
+		if (ajs[i] > 0 || cjs[i] > 0 || djs[i] > 0) 
+		   writeln(astr + "," + cstr + "," + dstr);
+	   
+  	}	  
+		
+	writeln(" \nCSV Quantities: ")
+  	for (var i in avions) {
+		var astr = "", cstr = "", dstr = "";
+		if (ajs[i] > 0 && aqs[i] > 0) astr = aqs[i];
+		if (cjs[i] > 0 && cqs[i] > 0) cstr = cqs[i];	
+		if (djs[i] > 0 && dqs[i] > 0) dstr = dqs[i];	
+		
+		if (ajs[i] > 0 || cjs[i] > 0 || djs[i] > 0) 
+		   writeln(astr + "," + cstr + "," + dstr);
+	   
+  	}
 }
