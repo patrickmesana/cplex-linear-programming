@@ -69,12 +69,12 @@ subject to {
         
     // Elimination de sous-tours par les variables de flot   
  	forall (c in camions, v in V:v != 1){
- 	 	sum (a in A: a.v_arr == v) y[c][a] - sum (a in A: a.v_dep == v) y[c][a] == 1;
+ 	 	sum (a in A: a.v_arr == v) y[c][a] - sum (a in A: a.v_dep == v) y[c][a] == sum (a in A: a.v_arr == v) x[c][a];
  	}
  	  
  	// Chaque tournee peut aller jusqua max 15 clients  
  	forall (c in camions){
- 		sum (a in A: a.v_arr == 1) y[c][a] - sum (a in A: a.v_dep == 1) y[c][a] <= -(tourneeMax-1);
+ 		sum (a in A: a.v_arr == 1) y[c][a] - sum (a in A: a.v_dep == 1) y[c][a] >= -(tourneeMax-1);
 	} 	
  	 	
  	// Si x est 0 y est 0, sinon x peut prendre une valeure max  
