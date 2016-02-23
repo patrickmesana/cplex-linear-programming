@@ -24,62 +24,72 @@ float         D[V][V] = ...;
 // ***********************
 
 // x [<i,j>]= 1 si le noeud j suit immédiatement le noeud i  dans le circuit
-dvar boolean x[A];
+dvar boolean x[camions][A];
 
 // Variables de flot pour elimination de sous-tours
 dvar float+ y[camions][A];
-dvar boolean yBin[camions][A];
 
 // ***********************
 // Fonction-objectif
 // ***********************
 
 // Minimiser la longueur du circuit
-minimize sum (<i,j> in A) D[i][j]*x[<i,j>];
+minimize sum (<i,j> in A, c in camions) D[i][j]*x[c][<i,j>];
 
 // ***********************
 // Contraintes
 // ***********************
 subject to {
    
-   forall (v in V:v != 1){
+   forall (v in V: v != 1){
    		// On entre dans chaque noeud une et une seule fois   
-        sum (a in A: a.v_arr == v) x[a] == 1;
+        sum (a in A, c in camions: a.v_arr == v) x[c][a] == 1;
         // On sort de chaque noeud une et une seule fois
-        sum (a in A: a.v_dep == v) x[a] == 1;
-   }        
- 
- 	sum (a in A: a.v_arr == 1) x[a] == nbrDeCamions;
- 	sum (a in A: a.v_dep == 1) x[a] == nbrDeCamions;
- 	
+        sum (a in A, c in camions: a.v_dep == v) x[c][a] == 1;
+   }
+   
+ 	//Autorise 3 entrees et 3 sorties du noeud initiale
+    sum (a in A, c in camions: a.v_arr == 1) x[c][a] == 3;
+    sum (a in A, c in camions: a.v_dep == 1) x[c][a] == 3;
+
+   //Un camion ne peut utiliser le noeud initial qu'une fois
+   forall (c in camions){
+        // On entre du noeud 1 une et une seule fois   
+        sum (a in A: a.v_arr == 1) x[c][a] == 1;
+        // On sort du noeud 1 une et une seule fois
+        sum (a in A: a.v_dep == 1) x[c][a] == 1;
+   }
+   
+   //Un camion qui va a un noeud doit en resortir
+    forall (c in camions, v in V) {
+            sum (a in A: a.v_arr == v) x[c][a] - sum (a in A: a.v_dep == v) x[c][a] == 0; 
+        }
+        
     // Elimination de sous-tours par les variables de flot   
  	forall (c in camions, v in V:v != 1){
  	 	sum (a in A: a.v_arr == v) y[c][a] - sum (a in A: a.v_dep == v) y[c][a] == 1;
  	}
  	  
  	// Chaque tournee peut aller jusqua max 15 clients  
- 	sum (c in camions, a in A: a.v_arr == 1) y[c][a] - sum (c in camions, a in A: a.v_dep == 1) y[c][a] <= -(tourneeMax-1);
+ 	forall (c in camions){
+ 		sum (a in A: a.v_arr == 1) y[c][a] - sum (a in A: a.v_dep == 1) y[c][a] <= -(tourneeMax-1);
+	} 	
  	 	
- 	// Si x est 0 y est 0, sinon y peut prendre une valeure max  
+ 	// Si x est 0 y est 0, sinon x peut prendre une valeure max  
  	forall (c in camions, a in A){
- 	    y[c][a] <= tourneeMax*x[a];
+ 	    y[c][a] <= tourneeMax*x[c][a];
     } 	  
-    
-    // Si y > 0 => yBin = 1
-//    forall (c in camions, a in A){
-// 	    yBin[c][a] * tourneeMax >= y[c][a];
-// 	    
-//    } 
-    
+   
     //Chaque tournee doit se faire en moins de 7heures (420minutes)
-//   	forall (c in camions){
-//   		sum (a in A) D[a.v_dep][a.v_arr]*yBin[c][a] <= tempsMax;
-//    }  
+   	forall (c in camions){
+   		sum (a in A) D[a.v_dep][a.v_arr]*x[c][a] <= tempsMax;
+    }  
  };
 
 // Affichage de la solution optimale 
- setof(int) succ[i in V] = {j | <i,j> in A : x[<i,j>] == 1};
-   execute{
+ setof(int) succ[c in camions,i in V] = {j | <i,j> in A : x[c][<i,j>] == 1};
+   execute{   
+   
     function compactTournee(tourneeContainer, tourneeEnds) {
 	     var t = new Array(tourneeEnds + 1);
 	     for (var k = 0; k < tourneeEnds + 1; k++) {
@@ -94,27 +104,23 @@ subject to {
 	    	write(",", tourneeContainer[k]);
 	    }
 	    write(",", tourneeContainer[tourneeContainer.length - 1]);
-    }  
+    } 
      
     var noeudsCouverts = 0;
-    for (var it = 0; succ[1].size > 0 && it < succ[1].size; it++)
+    for (var it = 1; it < nbrDeCamions + 1; it++)
     { 
-		  var tournee = new Array(nbrDeCamions);
-		  //selection du premier noeud
-		  var v1 = Opl.item(succ[1], it);
-		  tournee[0] = v1;
-		  var tourneeIndex = 1;
-		 
-		  for (var v = v1; Opl.first(succ[v]) != 1 ;)
+		  var tournee = new Array();
+		  var tourneeIndex = 0;
+		  for (var v = 1; Opl.first(succ[it][v]) != 1 ;)
 		  {
-		     if (succ[v].size > 0)
+		     if (succ[it][v].size > 0)
 		     {
-			     v = Opl.first(succ[v]);
+			     v = Opl.first(succ[it][v]);
 			     tournee[tourneeIndex] = v;
 			     tourneeIndex++;
 		     }         
 		  }
-		  tournee[tourneeIndex] = Opl.first(succ[v]);
+		  tournee[tourneeIndex] = Opl.first(succ[it][v]);
 		  writeTournee(compactTournee(tournee, tourneeIndex));
 		  writeln();
 		  noeudsCouverts += tourneeIndex;
