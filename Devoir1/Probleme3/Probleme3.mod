@@ -36,6 +36,8 @@ dvar float+ y[camions][A];
 // Minimiser la longueur du circuit
 minimize sum (<i,j> in A, c in camions) D[i][j]*x[c][<i,j>];
 
+dexpr float sommeTournee[c in camions] = sum (a in A) D[a.v_dep][a.v_arr]*x[c][a];
+
 // ***********************
 // Contraintes
 // ***********************
@@ -82,7 +84,7 @@ subject to {
    
     //Chaque tournee doit se faire en moins de 7heures (420minutes)
    	forall (c in camions){
-   		sum (a in A) D[a.v_dep][a.v_arr]*x[c][a] <= tempsMax;
+   		sommeTournee[c] <= tempsMax;
     }  
  };
 
