@@ -1,0 +1,14 @@
+/*********************************************
+ * OPL 12.6.3.0 Data
+ * Author: patrickmesana
+ * Creation Date: 2016-03-18 at 3:59:30 PM
+ *********************************************/
+
+ nbrSites = 25;
+ nbrClients = 75; 
+ nbrDeFranchisesAOuvrir = 6;
+ clientsDesservisMin = 5;
+ clientsDesservisMax = 15;
+ SheetConnection sheet("6617-Travail2-H16-Pb1-DATA.xls");
+ DistanceSS from SheetRead(sheet, "DistanceSS");
+ DistanceCS from SheetRead(sheet, "DistanceCS");
