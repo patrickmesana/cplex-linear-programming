@@ -9,6 +9,14 @@
 			<ref name="Probleme1.dat" type="data">
 			</ref>
 		</config>
+		<config category="opl" default="false" name="Configuration1.2">
+			<ref name="Probleme1.2.mod" type="model">
+			</ref>
+			<ref name="Probleme1.ops" type="setting">
+			</ref>
+			<ref name="Probleme1.dat" type="data">
+			</ref>
+		</config>
 	</configs>
 	
 </project>
