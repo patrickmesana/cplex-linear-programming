@@ -13,6 +13,9 @@
  int clientsDesservisMax = ...;
  float DistanceCS[clients][sites] = ... ;
  float DistanceSS[sites][sites] = ... ;
+ 
+ tuple       couple        {int s1; int s2;}
+ setof(couple) S = {<i,j> | i,j in sites: i != j};
 
 
 // ***********************
@@ -21,11 +24,12 @@
 dvar boolean x[sites]; //vaut 1 si la franchise est choisi, 0 sinon
 dvar boolean y[clients][sites]; //vaut 1 si le client i est desservi par la franchise j, 0 sinon
 dvar boolean z[sites][sites];//vaut 1 quand les deux sites sont ouverts
+dexpr float dz[c in S] = DistanceSS[c.s1][c.s2] * z[c.s1][c.s2];
 
 // ***********************
 // Fonction-objectif
 // ***********************
-maximize sum (s1 in sites, s2 in sites) DistanceSS[s1][s2] * z[s1][s2];
+maximize sum (c in S) dz[c]; //somme des distances entre site (X2)
  
 // ***********************
 // Expressions
@@ -51,9 +55,58 @@ subject to {
 		nbrDeClientsDeservisParLeSite[s] <= clientsDesservisMax * x[s];	
 	}
 	
-	forall (s1 in sites, s2 in sites) {
-		 z[s1][s2] == 1 => (x[s1] == 1 && x[s2] == 1);
-		 z[s1][s2] == 0 => (x[s1] == 0 || x[s2] == 0);
+	//Contraintes de couplages
+	forall (c in S) {
+		 z[c.s1][c.s2] == 1 => (x[c.s1] == 1 && x[c.s2] == 1);
+		 z[c.s1][c.s2] == 0 => (x[c.s1] == 0 || x[c.s2] == 0);
 	}
 	
+	forall (s in sites) {
+		z[s][s] == 0;	
+	}
+	
+}
+
+execute {
+	
+	function equalsPair(pair1, pair2) {
+		return ((pair1.site1 == pair2.site1) && (pair1.site2 == pair2.site2)) ||
+				((pair1.site1 == pair2.site2) && (pair1.site2 == pair2.site1));
+	}
+	
+	function SitePair(site1, site2, distance) {
+		this.site1 = site1;
+		this.site2 = site2;
+		this.distance = distance;	
+	}
+	
+	function isPairAlreadyIn(pairs, pair) {
+		for (var i = 0; i < pairs.length; i++) {
+			if (equalsPair(pairs[i], pair)) {
+				return true;			
+			}	
+		}
+		return false;
+	}
+	
+	var maxLength = nbrDeFranchisesAOuvrir * (nbrDeFranchisesAOuvrir - 1) / 2;
+	var results = new Array(maxLength);
+	var nextFranchise = 0;
+	for (var i = 1; i < nbrSites + 1; i++) {
+		for (var j = 1; j < nbrSites + 1; j++) {
+			if (z[i][j] == 1) {
+				var aSitePair = new SitePair(i, j, DistanceSS[i][j]);
+				if (!isPairAlreadyIn(results, aSitePair)) {
+					results[nextFranchise] = aSitePair;
+					nextFranchise++;			
+				}
+			}	
+		}
+	}
+	
+	for (var i = 0; i < maxLength; i++) {
+		writeln('<'+results[i].site1+','+results[i].site2+'> '+results[i].distance);	
+	}	
+	
+	"Nbr de couples de sites: " + maxLength;
 }
