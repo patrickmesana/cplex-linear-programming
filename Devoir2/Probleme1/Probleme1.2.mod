@@ -23,14 +23,13 @@
 // ***********************
 dvar boolean x[sites]; //vaut 1 si la franchise est choisi, 0 sinon
 dvar boolean y[clients][sites]; //vaut 1 si le client i est desservi par la franchise j, 0 sinon
-dvar boolean z[sites][sites];//vaut 1 quand les deux sites sont ouverts
-dexpr float dz[c in S] = DistanceSS[c.s1][c.s2] * z[c.s1][c.s2];
+dvar float v_min;
 
 // ***********************
 // Fonction-objectif
 // ***********************
-maximize sum (c in S) dz[c]; //somme des distances entre site (X2)
- 
+maximize v_min;
+
 // ***********************
 // Expressions
 // *********************** 
@@ -55,17 +54,13 @@ subject to {
 		nbrDeClientsDeservisParLeSite[s] <= clientsDesservisMax * x[s];	
 	}
 	
-	//Contraintes de couplages
 	forall (c in S) {
-		 z[c.s1][c.s2] == 1 => (x[c.s1] == 1 && x[c.s2] == 1);
-		 z[c.s1][c.s2] == 0 => (x[c.s1] == 0 || x[c.s2] == 0);
+		 (x[c.s1] == 1 && x[c.s2] == 1) =>  (v_min <= DistanceSS[c.s1][c.s2]);
 	}
-	
-	forall (s in sites) {
-		z[s][s] == 0;	
-	}
-	
+		
 }
+
+dexpr float z[i in sites][j in sites] = x[i] == 1 && x[j] == 1 && i != j;
 
 execute {
 	
