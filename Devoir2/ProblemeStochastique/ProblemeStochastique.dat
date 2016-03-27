@@ -1,0 +1,20 @@
+/*********************************************
+ * OPL 12.6.3.0 Data
+ * Author: patrickmesana
+ * Creation Date: 2016-03-26 at 7:32:54 PM
+ *********************************************/
+
+ vendredi = 5;
+ nrbAP = 15;
+ nbrAS = 20;
+ analyses = [330 425 380 440 370];
+ CAP = 240; // Cout par jour d'un Analyste Permanent (AP)
+ CAS = 176; // Cout par jour d'un Analyste Surnumenaire (AS)
+ CHSP = 60; // Cout Heure Sup d'un AP
+ CHSS = 44; // Cout Heure Sup d'un AS
+ RAP = 3; // Rendement d'un AP
+ RAS = 2; // Rendement d'un AS
+ coutDeDepassement = 30;
+ 
+ 
+ 

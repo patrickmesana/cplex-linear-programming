@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="ASCII"?><project>
+	<version>1.0</version>
+	<configs>
+		<config category="opl" default="true" name="ProblemeStochastique2.1">
+			<ref name="ProblemeStochastique.ops" type="setting">
+			</ref>
+			<ref name="ProblemeStochastique.dat" type="data">
+			</ref>
+			<ref name="ProblemeStochastique2.1.mod" type="model">
+			</ref>
+		</config>
+	</configs>
+	
+</project>
