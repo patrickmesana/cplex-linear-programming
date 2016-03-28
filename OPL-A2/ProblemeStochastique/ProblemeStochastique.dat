@@ -15,6 +15,6 @@
  RAP = 3; // Rendement d'un AP
  RAS = 2; // Rendement d'un AS
  coutDeDepassement = 30;
- 
- 
+ nbrDeScenarios = 3;
+ Probabilite = [0.25 0.5 0.25];
  
