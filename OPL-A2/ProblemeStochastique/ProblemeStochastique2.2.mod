@@ -8,8 +8,6 @@
  int nrbAP = ...;
  int nbrAS = ...;
  range jours = 1..vendredi;
- range aps = 1..nrbAP;
- range ass = 1..nbrAS;
  float analyses[jours] = ...;
  int CAP = ...; // Cout par jour d'un Analyste Permanent (AP)
  int CAS = ...; // Cout par jour d'un Analyste Surnumenaire (AS)
@@ -33,7 +31,8 @@
  float Probabilite[S] = ...;
  //Probabilite de chaque sequence
  float P[1..nb_seq]; 
- 
+ range apGroups = 1..5;
+ int combinaisonJoursAP[apGroups][jours] = ...;
  float An[jours][S];
  
  // Parametres A[t][i][j] = 1 si les sequences i et j partagent le meme 
@@ -93,18 +92,20 @@
 // ***********************
 // Variables de decision
 // ***********************
-dvar boolean AP[aps][jours][seqs];
-dvar boolean AS[ass][jours][seqs]; 
+dvar int+ nbrAnP[jours][seqs];
+dvar int+ nbrAnS[jours][seqs];
+dvar int+ d[apGroups][seqs];
 dvar int+ HSp[seqs]; //heures sup d'un AP
 dvar int+ HSs[seqs]; //heures sup d'un AS
 dvar int+ Stock[jours][seqs];//stock au debut de la journee
+
  
 // ***********************
 // Fonction-objectif
 // ***********************
 minimize sum(s in seqs) P[s] * ( 
-		sum (a in aps, j in jours) AP[a][j][s] * CAP +
-		sum (a in ass, j in jours) AS[a][j][s] * CAS +
+		sum (j in jours) nbrAnP[j][s] * CAP +
+		sum (j in jours) nbrAnS[j][s] * CAS +
 		HSp[s] * CHSP +
 		HSs[s] * CHSS + 
 		sum (j in jours) Stock[j][s] * coutDeDepassement);
@@ -113,18 +114,14 @@ minimize sum(s in seqs) P[s] * (
 // Expressions
 // ***********************
 //heures d'analyse par AP dans la journee
-dexpr int HAP[j in jours, s in seqs] = 7 * sum(i in aps) AP[i][j][s];
+dexpr int HAP[j in jours, s in seqs] = 7 * nbrAnP[j][s];
 //heures d'analyse par AS dans la journee
-dexpr int HAS[j in jours, s in seqs] = 7 * sum(i in ass) AS[i][j][s];
+dexpr int HAS[j in jours, s in seqs] = 7 * nbrAnS[j][s];
 //quantite d'analyses traitees dans la journee
 dexpr int Q[j in jours, s in seqs] = HAP[j][s] * RAP + HAS[j][s] * RAS;
 //quantites sup a traite
-dexpr int Qs[s in seqs] = HSp[s] + HSs[s];
+dexpr int Qs[s in seqs] = HSp[s] * RAP + HSs[s] * RAS;
 
-
-// ***********************
-// Contraintes
-// ***********************
 subject to {
 
 //On commence la semaine sans stock
@@ -132,29 +129,33 @@ forall (s in seqs) Stock[1][s] == 0;
 
 //les stocks est ce qui reste a faire a la fin de la journee
 forall (j in 1..vendredi-1, s in seqs) Stock[j+1][s] == (An[j][sequences[s][j]] + Stock[j][s]) - Q[j][s];
-	
-//Semaine de 4 jours pour AP
-forall (a in aps, s in seqs) sum(j in jours) AP[a][j][s] == 4;
 
-//5 AP max en conges par jour
-forall (j in jours, s in seqs) sum(a in aps) AP[a][j][s] >= nrbAP - 5;
+
+//Semaine de 4 jours pour AP
+forall(j in jours, s in seqs) sum(g in apGroups) combinaisonJoursAP[j][g] * d[g][s] == nbrAnP[j][s];
+
+//5 AP max en conges par jour et max des deux types
+forall (j in jours, s in seqs){ 
+	nbrAnP[j][s] >= nrbAP - 5;
+	nbrAnP[j][s] <= nrbAP;
+	nbrAnS[j][s] <= nbrAS;
+}
 
 //heures suplementaires
 forall (s in seqs) {
 	analyses[vendredi] + Stock[vendredi][s] == Q[vendredi][s] + Qs[s];
-	HSp[s] <= sum(a in aps) AP[a][vendredi][s] * 2;
-	HSs[s] <= sum(a in ass) AS[a][vendredi][s] * 2;
+	HSp[s] <= nbrAnP[vendredi][s] * 2;
+	HSs[s] <= nbrAnS[vendredi][s] * 2;
 }
 
 //contraintes de non-anticipations
-   forall(i in aps,t in jours, k in 1..nb_seq)
+   forall(t in jours, k in 1..nb_seq)
    non_anticipation_AP:
-   sum(l in 1..nb_seq : l != k) (P[l]*A[t][k][l]*AP[i][t][l]) ==
-   (sum(l in 1..nb_seq : l != k) P[l]*A[t][k][l])*AP[i][t][k];  
+   sum(l in 1..nb_seq : l != k) (P[l]*A[t][k][l]*nbrAnP[t][l]) ==
+   (sum(l in 1..nb_seq : l != k) P[l]*A[t][k][l])*nbrAnP[t][k];  
    
-   forall(i in ass,t in jours, k in 1..nb_seq)
+   forall(t in jours, k in 1..nb_seq)
    non_anticipation_AS:
-   sum(l in 1..nb_seq : l != k) (P[l]*A[t][k][l]*AS[i][t][l]) ==
-   (sum(l in 1..nb_seq : l != k) P[l]*A[t][k][l])*AS[i][t][k];
-
+   sum(l in 1..nb_seq : l != k) (P[l]*A[t][k][l]*nbrAnS[t][l]) ==
+   (sum(l in 1..nb_seq : l != k) P[l]*A[t][k][l])*nbrAnS[t][k];
 }

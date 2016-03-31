@@ -17,4 +17,11 @@
  coutDeDepassement = 30;
  nbrDeScenarios = 3;
  Probabilite = [0.25 0.5 0.25];
+combinaisonJoursAP = [
+[1 1 1 1 0]
+[1 1 1 0 1]
+[1 1 0 1 0]
+[1 0 1 0 1]
+[0 1 1 1 1]
+];
  

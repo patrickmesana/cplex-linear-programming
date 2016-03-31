@@ -4,17 +4,17 @@
 		<config category="opl" default="true" name="ProblemeStochastique2.1">
 			<ref name="ProblemeStochastique.ops" type="setting">
 			</ref>
-			<ref name="ProblemeStochastique.dat" type="data">
-			</ref>
 			<ref name="ProblemeStochastique2.1.mod" type="model">
+			</ref>
+			<ref name="ProblemeStochastique2.1.dat" type="data">
 			</ref>
 		</config>
 		<config category="opl" default="false" name="ProblemeStochastique2.2">
 			<ref name="ProblemeStochastique.ops" type="setting">
 			</ref>
-			<ref name="ProblemeStochastique.dat" type="data">
-			</ref>
 			<ref name="ProblemeStochastique2.2.mod" type="model">
+			</ref>
+			<ref name="ProblemeStochastique2.2.dat" type="data">
 			</ref>
 		</config>
 	</configs>
